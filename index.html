@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间轴编辑器 - Wave Creator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>🎬 时间轴编辑器</h1>
+            <div class="header-controls">
+                <button id="addTrackBtn" class="btn btn-primary">➕ 添加轨道</button>
+                <label>
+                    时长(秒): 
+                    <input type="number" id="durationInput" value="60" min="10" max="600" step="10">
+                </label>
+                <label>
+                    <input type="checkbox" id="snapToGrid" checked>
+                    🧲 对齐刻度
+                </label>
+                <div class="zoom-indicator">
+                    缩放: <span id="zoomLevel">100%</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- 轨道列表 -->
+            <div class="tracks-panel">
+                <div id="trackList" class="track-list">
+                    <!-- 轨道将动态添加到这里 -->
+                </div>
+            </div>
+
+            <!-- 时间轴区域 -->
+            <div class="timeline-panel">
+                <div class="timeline-ruler" id="timelineRuler">
+                    <!-- 时间刻度将动态生成 -->
+                </div>
+                <div class="timeline-tracks" id="timelineTracks">
+                    <div class="snap-line" id="snapLine"></div>
+                    <!-- 时间轴轨道将动态添加到这里 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 侧边栏 - 事件编辑 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>事件编辑器</h3>
+                <button id="closeSidebar" class="btn-close">✖</button>
+            </div>
+            <div class="sidebar-content" id="sidebarContent">
+                <p class="placeholder">点击事件或双击轨道添加事件</p>
+            </div>
+        </aside>
+    </div>
+
+    <!-- 事件类型定义模态框 -->
+    <div id="eventTypeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>自定义事件类型</h3>
+                <button class="btn-close" onclick="closeEventTypeModal()">✖</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>事件类型名称:</label>
+                    <input type="text" id="eventTypeName" placeholder="例如: 音效事件">
+                </div>
+                <div class="form-group">
+                    <label>颜色:</label>
+                    <input type="color" id="eventTypeColor" value="#3498db">
+                </div>
+                <div class="form-group">
+                    <label>自定义字段 (JSON格式):</label>
+                    <textarea id="eventTypeFields" rows="6" placeholder='例如:
+{
+  "volume": 0.8,
+  "soundFile": "",
+  "loop": false
+}'></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="saveEventType()">保存事件类型</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="models.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
