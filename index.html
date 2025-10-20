@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>时间轴编辑器 - Wave Creator</title>
+    <title>波次编辑器 - Wave Creator</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="app-container">
         <header class="header">
-            <h1>🎬 时间轴编辑器</h1>
+            <h1>🎮 波次编辑器 - Wave Creator</h1>
             <div class="header-controls">
                 <button id="addTrackBtn" class="btn btn-primary">➕ 添加轨道</button>
+                <button class="btn btn-secondary" onclick="app.showWaveStatistics()">📊 波次统计</button>
+                <button class="btn btn-secondary" onclick="app.exportWaveConfig()">📤 导出配置</button>
+                <button class="btn btn-secondary" onclick="app.openEnemyManager()">👾 管理敌人</button>
                 <label>
                     时长(秒): 
                     <input type="number" id="durationInput" value="60" min="10" max="600" step="10">
@@ -58,37 +61,14 @@
         </aside>
     </div>
 
-    <!-- 事件类型定义模态框 -->
-    <div id="eventTypeModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>自定义事件类型</h3>
-                <button class="btn-close" onclick="closeEventTypeModal()">✖</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label>事件类型名称:</label>
-                    <input type="text" id="eventTypeName" placeholder="例如: 音效事件">
-                </div>
-                <div class="form-group">
-                    <label>颜色:</label>
-                    <input type="color" id="eventTypeColor" value="#3498db">
-                </div>
-                <div class="form-group">
-                    <label>自定义字段 (JSON格式):</label>
-                    <textarea id="eventTypeFields" rows="6" placeholder='例如:
-{
-  "volume": 0.8,
-  "soundFile": "",
-  "loop": false
-}'></textarea>
-                </div>
-                <button class="btn btn-primary" onclick="saveEventType()">保存事件类型</button>
-            </div>
-        </div>
-    </div>
-
     <script src="models.js"></script>
     <script src="app.js"></script>
+    <script>
+        // 初始化应用
+        let app;
+        window.addEventListener('DOMContentLoaded', () => {
+            app = new TimelineApp();
+        });
+    </script>
 </body>
 </html>

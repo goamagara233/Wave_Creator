@@ -480,3 +480,412 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #666;
 }
+
+/* 敌人预览样式 */
+.enemy-preview {
+    background: #2d2d30;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.enemy-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    line-height: 1;
+    flex-shrink: 0;
+    background: #1e1e1e;
+    border-radius: 8px;
+}
+
+.enemy-icon .icon-image {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+}
+
+.enemy-info {
+    flex: 1;
+}
+
+.enemy-info strong {
+    font-size: 16px;
+    color: #fff;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.enemy-info small {
+    font-size: 11px;
+    color: #888;
+    display: block;
+    margin-bottom: 8px;
+    font-family: 'Courier New', monospace;
+}
+
+.validation-warning {
+    font-size: 12px;
+    color: #f39c12;
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: rgba(243, 156, 18, 0.1);
+    border-radius: 4px;
+}
+
+.validation-success {
+    font-size: 12px;
+    color: #2ecc71;
+    margin-top: 8px;
+    padding: 6px 10px;
+    background: rgba(46, 204, 113, 0.1);
+    border-radius: 4px;
+}
+
+.enemy-stats {
+    display: flex;
+    gap: 15px;
+    font-size: 12px;
+    color: #ccc;
+}
+
+.enemy-stats span {
+    background: #1e1e1e;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: #888;
+}
+
+.form-group hr {
+    margin: 15px 0;
+    border: none;
+    border-top: 1px solid #3e3e42;
+}
+
+/* 敌人网格布局 */
+.enemy-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+}
+
+/* 紧凑型敌人卡片 */
+.enemy-card-compact {
+    background: #2d2d30;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.enemy-card-compact:hover {
+    border-color: #007acc;
+    box-shadow: 0 2px 8px rgba(0, 122, 204, 0.3);
+}
+
+.enemy-card-main {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+}
+
+.enemy-icon-small {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    background: #1e1e1e;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.enemy-icon-small .icon-image {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.enemy-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.enemy-card-info strong {
+    display: block;
+    font-size: 16px;
+    color: #fff;
+    margin-bottom: 4px;
+}
+
+.enemy-card-info small {
+    font-size: 12px;
+    color: #888;
+    font-family: 'Courier New', monospace;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.status-valid {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+}
+
+.status-warning {
+    background: rgba(243, 156, 18, 0.2);
+    color: #f39c12;
+}
+
+.enemy-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: 15px;
+}
+
+.btn-icon {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background: #3c3c3c;
+}
+
+.btn-icon.btn-danger:hover {
+    background: rgba(211, 47, 47, 0.2);
+}
+
+/* 敌人详情面板 */
+.enemy-card-details {
+    padding: 15px;
+    background: #1e1e1e;
+    border-top: 1px solid #3e3e42;
+}
+
+.detail-row {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.detail-row label {
+    flex: 0 0 100px;
+    font-size: 12px;
+    color: #aaa;
+}
+
+.detail-value {
+    flex: 1;
+    font-size: 12px;
+    color: #e0e0e0;
+    font-family: 'Courier New', monospace;
+    word-break: break-all;
+}
+
+.detail-warnings {
+    margin-top: 15px;
+    padding: 10px;
+    background: rgba(243, 156, 18, 0.1);
+    border-radius: 4px;
+    font-size: 12px;
+    color: #f39c12;
+}
+
+.detail-warnings ul {
+    margin: 8px 0 0 20px;
+}
+
+.detail-warnings li {
+    margin-bottom: 4px;
+}
+
+/* 空状态 */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    color: #888;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+/* 模态框头部动作按钮 */
+.modal-header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* 敌人表单样式 */
+.enemy-form {
+    padding: 0;
+}
+
+.enemy-form h3 {
+    color: #fff;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.enemy-select {
+    font-size: 14px;
+}
+
+/* 图标上传容器 */
+.icon-upload-container {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.icon-preview {
+    width: 80px;
+    height: 80px;
+    background: #1e1e1e;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #3e3e42;
+    flex-shrink: 0;
+}
+
+.icon-preview .icon-placeholder {
+    font-size: 40px;
+    opacity: 0.3;
+}
+
+.icon-preview .icon-emoji {
+    font-size: 48px;
+}
+
+.icon-preview .icon-image {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+}
+
+.icon-upload-options {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.icon-upload-options input[type="text"] {
+    width: 100%;
+}
+
+.icon-upload-options label.btn {
+    width: 100%;
+    text-align: center;
+    cursor: pointer;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+/* 表单动作按钮 */
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.form-actions button {
+    flex: 1;
+}
+
+/* 大尺寸模态框 */
+.modal-large {
+    width: 800px;
+    max-width: 95%;
+}
+
+/* 事件点图标和数量 */
+.event-icon {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.event-icon .icon-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.event-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #f44336;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 5px;
+    border-radius: 10px;
+    line-height: 1;
+    pointer-events: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* 模态框样式调整 */
+.modal-content {
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-body {
+    overflow-y: auto;
+    flex: 1;
+}
+

@@ -3,6 +3,122 @@
  * 可扩展的事件系统，支持自定义事件类型
  */
 
+// 敌人类型定义注册表
+class EnemyTypeRegistry {
+    constructor() {
+        this.enemies = new Map();
+        this.registerDefaultEnemies();
+    }
+
+    // 注册默认敌人类型（现在为空，用户自行添加）
+    registerDefaultEnemies() {
+        // 不再注册预设敌人，用户可以自行添加
+        // 尝试从localStorage加载已保存的敌人数据
+        this.loadFromStorage();
+    }
+
+    // 从localStorage加载敌人数据
+    loadFromStorage() {
+        try {
+            const saved = localStorage.getItem('wave_creator_enemies');
+            if (saved) {
+                const enemies = JSON.parse(saved);
+                enemies.forEach(enemy => {
+                    // 直接设置，不触发保存
+                    this.enemies.set(enemy.id, enemy);
+                });
+            }
+        } catch (error) {
+            console.error('加载敌人数据失败:', error);
+        }
+    }
+
+    // 保存到localStorage
+    saveToStorage() {
+        try {
+            const enemies = this.getAll();
+            localStorage.setItem('wave_creator_enemies', JSON.stringify(enemies));
+        } catch (error) {
+            console.error('保存敌人数据失败:', error);
+        }
+    }
+
+    // 注册新的敌人类型
+    register(id, config) {
+        this.enemies.set(id, {
+            id,
+            name: config.name || id,
+            icon: config.icon || '👾',
+            scenePath: config.scenePath || '',
+            uid: config.uid || '',
+        });
+        // 每次注册后自动保存
+        this.saveToStorage();
+    }
+
+    // 获取敌人类型
+    get(id) {
+        // 如果指定ID存在，返回它
+        if (this.enemies.has(id)) {
+            return this.enemies.get(id);
+        }
+        // 否则返回第一个可用的敌人，如果没有敌人则返回null
+        const firstEnemy = this.enemies.values().next().value;
+        return firstEnemy || null;
+    }
+
+    // 获取所有敌人类型
+    getAll() {
+        return Array.from(this.enemies.values());
+    }
+
+    // 删除敌人类型
+    remove(id) {
+        if (this.enemies.has(id)) {
+            this.enemies.delete(id);
+            this.saveToStorage(); // 删除后保存
+            return true;
+        }
+        return false;
+    }
+
+    // 检查敌人是否配置完整（用于烘焙时验证）
+    validate(id) {
+        const enemy = this.get(id);
+        const warnings = [];
+        
+        if (!enemy.scenePath) {
+            warnings.push(`敌人 "${enemy.name}" (${id}) 缺少场景路径 (scenePath)`);
+        }
+        if (!enemy.uid) {
+            warnings.push(`敌人 "${enemy.name}" (${id}) 缺少资源UID (uid)`);
+        }
+        
+        return {
+            valid: warnings.length === 0,
+            warnings
+        };
+    }
+
+    // 验证所有敌人配置
+    validateAll() {
+        const allWarnings = [];
+        this.enemies.forEach((enemy, id) => {
+            const result = this.validate(id);
+            if (!result.valid) {
+                allWarnings.push(...result.warnings);
+            }
+        });
+        return {
+            valid: allWarnings.length === 0,
+            warnings: allWarnings
+        };
+    }
+}
+
+// 全局敌人类型注册表实例
+const enemyTypeRegistry = new EnemyTypeRegistry();
+
 // 事件类型注册表
 class EventTypeRegistry {
     constructor() {
@@ -12,37 +128,22 @@ class EventTypeRegistry {
 
     // 注册默认事件类型
     registerDefaultTypes() {
-        this.register('default', {
-            name: '默认事件',
-            color: '#3498db',
-            fields: {
-                description: '',
-            }
-        });
-
-        this.register('audio', {
-            name: '音频事件',
+        this.register('spawn_enemy', {
+            name: '生成敌人',
             color: '#e74c3c',
+            icon: '👾',
             fields: {
-                soundFile: '',
-                volume: 1.0,
-                loop: false,
-            }
-        });
-
-        this.register('animation', {
-            name: '动画事件',
-            color: '#2ecc71',
-            fields: {
-                animationType: '',
-                duration: 1.0,
-                easing: 'linear',
+                enemyType: 'basic_enemy',  // 敌人ID
+                count: 1,                   // 生成数量
+                spawnPosition: 'random',    // 生成位置: random, left, right, top, bottom, center
+                formationType: 'single',    // 编队: single, line, circle, grid
             }
         });
 
         this.register('marker', {
             name: '标记点',
-            color: '#f39c12',
+            color: '#95a5a6',
+            icon: '🚩',
             fields: {
                 label: '',
                 note: '',

@@ -1,0 +1,306 @@
+{
+  "waveName": "示例波次 - 入侵开始",
+  "duration": 90,
+  "enemies": [
+    {
+      "id": "basic_enemy",
+      "name": "基础敌人",
+      "icon": "👾",
+      "color": "#e74c3c",
+      "description": "最基本的敌人类型",
+      "defaultStats": {
+        "health": 100,
+        "speed": 1.0,
+        "damage": 10
+      }
+    },
+    {
+      "id": "fast_enemy",
+      "name": "快速敌人",
+      "icon": "⚡",
+      "color": "#f39c12",
+      "description": "移动速度快的敌人",
+      "defaultStats": {
+        "health": 50,
+        "speed": 2.5,
+        "damage": 5
+      }
+    },
+    {
+      "id": "tank_enemy",
+      "name": "坦克敌人",
+      "icon": "🛡️",
+      "color": "#95a5a6",
+      "description": "血量高防御强的敌人",
+      "defaultStats": {
+        "health": 300,
+        "speed": 0.5,
+        "damage": 20
+      }
+    },
+    {
+      "id": "elite_enemy",
+      "name": "精英敌人",
+      "icon": "👹",
+      "color": "#9b59b6",
+      "description": "综合能力强的敌人",
+      "defaultStats": {
+        "health": 200,
+        "speed": 1.5,
+        "damage": 25
+      }
+    },
+    {
+      "id": "boss_enemy",
+      "name": "Boss",
+      "icon": "💀",
+      "color": "#c0392b",
+      "description": "强大的Boss级敌人",
+      "defaultStats": {
+        "health": 1000,
+        "speed": 0.8,
+        "damage": 50
+      }
+    }
+  ],
+  "spawnEvents": [
+    {
+      "time": 0,
+      "enemyId": "basic_enemy",
+      "enemyName": "基础敌人",
+      "count": 3,
+      "spawnPosition": "top",
+      "formationType": "line",
+      "stats": {
+        "health": 100,
+        "speed": 1.0,
+        "damage": 10
+      },
+      "trackName": "前期小怪"
+    },
+    {
+      "time": 5,
+      "enemyId": "basic_enemy",
+      "enemyName": "基础敌人",
+      "count": 5,
+      "spawnPosition": "left",
+      "formationType": "line",
+      "stats": {
+        "health": 100,
+        "speed": 1.0,
+        "damage": 10
+      },
+      "trackName": "前期小怪"
+    },
+    {
+      "time": 10,
+      "enemyId": "fast_enemy",
+      "enemyName": "快速敌人",
+      "count": 2,
+      "spawnPosition": "right",
+      "formationType": "single",
+      "stats": {
+        "health": 50,
+        "speed": 2.5,
+        "damage": 5
+      },
+      "trackName": "前期小怪"
+    },
+    {
+      "time": 15,
+      "enemyId": "basic_enemy",
+      "enemyName": "基础敌人",
+      "count": 8,
+      "spawnPosition": "random",
+      "formationType": "circle",
+      "stats": {
+        "health": 100,
+        "speed": 1.0,
+        "damage": 10
+      },
+      "trackName": "中期增强"
+    },
+    {
+      "time": 20,
+      "enemyId": "tank_enemy",
+      "enemyName": "坦克敌人",
+      "count": 1,
+      "spawnPosition": "center",
+      "formationType": "single",
+      "stats": {
+        "health": 300,
+        "speed": 0.5,
+        "damage": 20
+      },
+      "trackName": "中期增强"
+    },
+    {
+      "time": 25,
+      "enemyId": "fast_enemy",
+      "enemyName": "快速敌人",
+      "count": 4,
+      "spawnPosition": "top",
+      "formationType": "line",
+      "stats": {
+        "health": 50,
+        "speed": 2.5,
+        "damage": 5
+      },
+      "trackName": "中期增强"
+    },
+    {
+      "time": 30,
+      "enemyId": "basic_enemy",
+      "enemyName": "基础敌人",
+      "count": 10,
+      "spawnPosition": "random",
+      "formationType": "grid",
+      "stats": {
+        "health": 100,
+        "speed": 1.0,
+        "damage": 10
+      },
+      "trackName": "中期增强"
+    },
+    {
+      "time": 40,
+      "enemyId": "elite_enemy",
+      "enemyName": "精英敌人",
+      "count": 2,
+      "spawnPosition": "left",
+      "formationType": "line",
+      "stats": {
+        "health": 200,
+        "speed": 1.5,
+        "damage": 25
+      },
+      "trackName": "后期精英"
+    },
+    {
+      "time": 45,
+      "enemyId": "tank_enemy",
+      "enemyName": "坦克敌人",
+      "count": 2,
+      "spawnPosition": "right",
+      "formationType": "line",
+      "stats": {
+        "health": 300,
+        "speed": 0.5,
+        "damage": 20
+      },
+      "trackName": "后期精英"
+    },
+    {
+      "time": 50,
+      "enemyId": "fast_enemy",
+      "enemyName": "快速敌人",
+      "count": 6,
+      "spawnPosition": "random",
+      "formationType": "circle",
+      "stats": {
+        "health": 50,
+        "speed": 2.5,
+        "damage": 5
+      },
+      "trackName": "后期精英"
+    },
+    {
+      "time": 55,
+      "enemyId": "elite_enemy",
+      "enemyName": "精英敌人",
+      "count": 3,
+      "spawnPosition": "top",
+      "formationType": "line",
+      "stats": {
+        "health": 200,
+        "speed": 1.5,
+        "damage": 25
+      },
+      "trackName": "后期精英"
+    },
+    {
+      "time": 60,
+      "enemyId": "basic_enemy",
+      "enemyName": "基础敌人",
+      "count": 15,
+      "spawnPosition": "random",
+      "formationType": "grid",
+      "stats": {
+        "health": 100,
+        "speed": 1.0,
+        "damage": 10
+      },
+      "trackName": "最终冲刺"
+    },
+    {
+      "time": 70,
+      "enemyId": "elite_enemy",
+      "enemyName": "精英敌人",
+      "count": 4,
+      "spawnPosition": "random",
+      "formationType": "circle",
+      "stats": {
+        "health": 200,
+        "speed": 1.5,
+        "damage": 25
+      },
+      "trackName": "最终冲刺"
+    },
+    {
+      "time": 75,
+      "enemyId": "tank_enemy",
+      "enemyName": "坦克敌人",
+      "count": 3,
+      "spawnPosition": "random",
+      "formationType": "line",
+      "stats": {
+        "health": 300,
+        "speed": 0.5,
+        "damage": 20
+      },
+      "trackName": "最终冲刺"
+    },
+    {
+      "time": 80,
+      "enemyId": "boss_enemy",
+      "enemyName": "Boss",
+      "count": 1,
+      "spawnPosition": "center",
+      "formationType": "single",
+      "stats": {
+        "health": 1000,
+        "speed": 0.8,
+        "damage": 50
+      },
+      "trackName": "Boss登场"
+    },
+    {
+      "time": 85,
+      "enemyId": "elite_enemy",
+      "enemyName": "精英敌人",
+      "count": 2,
+      "spawnPosition": "left",
+      "formationType": "line",
+      "stats": {
+        "health": 200,
+        "speed": 1.5,
+        "damage": 25
+      },
+      "trackName": "Boss登场"
+    },
+    {
+      "time": 85,
+      "enemyId": "elite_enemy",
+      "enemyName": "精英敌人",
+      "count": 2,
+      "spawnPosition": "right",
+      "formationType": "line",
+      "stats": {
+        "health": 200,
+        "speed": 1.5,
+        "damage": 25
+      },
+      "trackName": "Boss登场"
+    }
+  ]
+}

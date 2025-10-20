@@ -14,6 +14,8 @@ class TimelineApp {
         this.isPanning = false; // 是否正在拖动
         this.panStart = { x: 0, y: 0 };
         this.scrollStart = { left: 0, top: 0 };
+        this.currentEditingEnemyId = null; // 当前编辑的敌人ID
+        this.currentIconData = null; // 当前选择的图标数据
         
         this.initializeUI();
         this.bindEvents();
@@ -298,7 +300,7 @@ class TimelineApp {
         div.className = 'timeline-track';
         div.dataset.trackId = track.id;
 
-        // 右键添加事件
+        // 右键添加敌人生成事件
         div.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             
@@ -311,7 +313,8 @@ class TimelineApp {
             time = this.snapTime(time);
             
             if (time >= 0 && time <= this.timeline.duration) {
-                this.addEvent(track.id, time);
+                // 默认添加敌人生成事件
+                this.addEvent(track.id, time, 'spawn_enemy');
             }
         });
 
@@ -349,6 +352,31 @@ class TimelineApp {
         div.dataset.trackId = track.id;
         div.style.left = (event.time * this.pixelsPerSecond) + 'px';
         div.style.background = typeConfig.color;
+
+        // 如果是敌人生成事件，显示敌人图标
+        if (event.type === 'spawn_enemy') {
+            const enemyType = enemyTypeRegistry.get(event.customData.enemyType);
+            if (enemyType) {
+                const icon = document.createElement('div');
+                icon.className = 'event-icon';
+                icon.innerHTML = this.renderEnemyIcon(enemyType.icon);
+                div.appendChild(icon);
+                
+                // 显示生成数量
+                if (event.customData.count > 1) {
+                    const count = document.createElement('div');
+                    count.className = 'event-count';
+                    count.textContent = `×${event.customData.count}`;
+                    div.appendChild(count);
+                }
+            }
+        } else if (typeConfig.icon) {
+            // 其他类型事件显示图标
+            const icon = document.createElement('div');
+            icon.className = 'event-icon';
+            icon.textContent = typeConfig.icon;
+            div.appendChild(icon);
+        }
 
         // 事件标签
         const label = document.createElement('div');
@@ -520,19 +548,99 @@ class TimelineApp {
         const allTypes = eventTypeRegistry.getAll();
 
         let fieldsHTML = '';
-        for (const [key, value] of Object.entries(event.customData)) {
-            const fieldType = typeof value === 'boolean' ? 'checkbox' : 
-                            typeof value === 'number' ? 'number' : 'text';
+        
+        // 如果是敌人生成事件，显示特殊UI
+        if (event.type === 'spawn_enemy') {
+            const allEnemies = enemyTypeRegistry.getAll();
             
-            fieldsHTML += `
-                <div class="form-group">
-                    <label>${key}:</label>
-                    ${fieldType === 'checkbox' 
-                        ? `<input type="checkbox" id="field_${key}" ${value ? 'checked' : ''}>`
-                        : `<input type="${fieldType}" id="field_${key}" value="${value}">`
-                    }
-                </div>
-            `;
+            // 检查是否有敌人可用
+            if (allEnemies.length === 0) {
+                fieldsHTML = `
+                    <div class="form-group">
+                        <div class="validation-warning">
+                            ⚠️ 还没有创建任何敌人类型！
+                        </div>
+                        <button class="btn btn-primary" onclick="app.openEnemyManager()">
+                            ➕ 创建敌人类型
+                        </button>
+                    </div>
+                `;
+            } else {
+                const selectedEnemy = enemyTypeRegistry.get(event.customData.enemyType);
+                const validation = selectedEnemy ? enemyTypeRegistry.validate(selectedEnemy.id) : { valid: false };
+                
+                fieldsHTML = `
+                    <div class="form-group">
+                        <label>敌人类型:</label>
+                        <select id="field_enemyType" class="enemy-select">
+                            ${allEnemies.map(e => `
+                                <option value="${e.id}" ${e.id === event.customData.enemyType ? 'selected' : ''}>
+                                    ${this.renderEnemySelectText(e.icon, e.name)}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    ${selectedEnemy ? `
+                        <div class="enemy-preview">
+                            <div class="enemy-icon">${this.renderEnemyIcon(selectedEnemy.icon)}</div>
+                            <div class="enemy-info">
+                                <strong>${selectedEnemy.name}</strong>
+                                <small style="color: #888;">${selectedEnemy.id}</small>
+                                ${!validation.valid ? `
+                                    <div class="validation-warning">
+                                        ⚠️ 烘焙时需要补充信息
+                                    </div>
+                                ` : '<div class="validation-success">✅ 配置完整</div>'}
+                            </div>
+                        </div>
+                    ` : ''}
+                    <div class="form-group">
+                        <label>生成数量:</label>
+                        <input type="number" id="field_count" value="${event.customData.count || 1}" min="1" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label>生成位置:</label>
+                        <select id="field_spawnPosition">
+                            <option value="random" ${event.customData.spawnPosition === 'random' ? 'selected' : ''}>随机</option>
+                            <option value="left" ${event.customData.spawnPosition === 'left' ? 'selected' : ''}>左侧</option>
+                            <option value="right" ${event.customData.spawnPosition === 'right' ? 'selected' : ''}>右侧</option>
+                            <option value="top" ${event.customData.spawnPosition === 'top' ? 'selected' : ''}>顶部</option>
+                            <option value="bottom" ${event.customData.spawnPosition === 'bottom' ? 'selected' : ''}>底部</option>
+                            <option value="center" ${event.customData.spawnPosition === 'center' ? 'selected' : ''}>中心</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>编队类型:</label>
+                        <select id="field_formationType">
+                            <option value="single" ${event.customData.formationType === 'single' ? 'selected' : ''}>单个</option>
+                            <option value="line" ${event.customData.formationType === 'line' ? 'selected' : ''}>直线</option>
+                            <option value="circle" ${event.customData.formationType === 'circle' ? 'selected' : ''}>圆形</option>
+                            <option value="grid" ${event.customData.formationType === 'grid' ? 'selected' : ''}>网格</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-secondary" onclick="app.openEnemyManager()">
+                            📋 管理敌人类型
+                        </button>
+                    </div>
+                `;
+            }
+        } else {
+            // 其他类型事件，显示常规字段
+            for (const [key, value] of Object.entries(event.customData)) {
+                const fieldType = typeof value === 'boolean' ? 'checkbox' : 
+                                typeof value === 'number' ? 'number' : 'text';
+                
+                fieldsHTML += `
+                    <div class="form-group">
+                        <label>${key}:</label>
+                        ${fieldType === 'checkbox' 
+                            ? `<input type="checkbox" id="field_${key}" ${value ? 'checked' : ''}>`
+                            : `<input type="${fieldType}" id="field_${key}" value="${value}">`
+                        }
+                    </div>
+                `;
+            }
         }
 
         this.sidebarContent.innerHTML = `
@@ -541,7 +649,7 @@ class TimelineApp {
                 <select id="eventType">
                     ${allTypes.map(t => `
                         <option value="${t.id}" ${t.id === event.type ? 'selected' : ''}>
-                            ${t.name}
+                            ${t.icon || '📌'} ${t.name}
                         </option>
                     `).join('')}
                 </select>
@@ -553,13 +661,8 @@ class TimelineApp {
             </div>
             ${fieldsHTML}
             <div class="form-group">
-                <button class="btn btn-primary" onclick="app.updateEvent()">保存</button>
-                <button class="btn btn-danger" onclick="app.deleteSelectedEvent()">删除</button>
-            </div>
-            <div class="form-group">
-                <button class="btn btn-secondary" onclick="openEventTypeModal()">
-                    自定义事件类型
-                </button>
+                <button class="btn btn-primary" onclick="app.updateEvent()">💾 保存</button>
+                <button class="btn btn-danger" onclick="app.deleteSelectedEvent()">🗑️ 删除</button>
             </div>
         `;
 
@@ -571,6 +674,14 @@ class TimelineApp {
             this.showEventEditor(event);
             this.renderTracks();
         });
+
+        // 敌人类型改变时更新预览
+        const enemyTypeSelect = document.getElementById('field_enemyType');
+        if (enemyTypeSelect) {
+            enemyTypeSelect.addEventListener('change', () => {
+                this.showEventEditor(event);
+            });
+        }
 
         this.sidebar.classList.add('active');
     }
@@ -668,6 +779,125 @@ class TimelineApp {
         URL.revokeObjectURL(url);
     }
 
+    // 导出波次配置（游戏专用格式）
+    exportWaveConfig() {
+        // 验证敌人配置
+        const validation = enemyTypeRegistry.validateAll();
+        if (!validation.valid) {
+            const warningMsg = '⚠️ 烘焙警告：以下敌人缺少Godot资源信息\n\n' + 
+                              validation.warnings.join('\n') + 
+                              '\n\n是否继续导出？（建议先在"管理敌人"中补充信息）';
+            if (!confirm(warningMsg)) {
+                return;
+            }
+        }
+
+        const waveData = this.generateWaveData();
+
+        const json = JSON.stringify(waveData, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `wave_config_${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        console.log('✅ 波次配置已导出');
+        console.log('📊 配置数据:', waveData);
+    }
+
+    // 生成波次数据
+    generateWaveData() {
+        const waveData = {
+            waveName: this.timeline.name,
+            duration: this.timeline.duration,
+            enemies: enemyTypeRegistry.getAll(),
+            spawnEvents: []
+        };
+
+        // 收集所有敌人生成事件
+        this.timeline.tracks.forEach(track => {
+            track.events.forEach(event => {
+                if (event.type === 'spawn_enemy') {
+                    const enemyConfig = enemyTypeRegistry.get(event.customData.enemyType);
+                    waveData.spawnEvents.push({
+                        time: event.time,
+                        enemyId: event.customData.enemyType,
+                        enemyName: enemyConfig.name,
+                        count: event.customData.count,
+                        spawnPosition: event.customData.spawnPosition,
+                        formationType: event.customData.formationType,
+                        // Godot资源信息（烘焙用）
+                        scenePath: enemyConfig.scenePath,
+                        uid: enemyConfig.uid,
+                        trackName: track.name
+                    });
+                }
+            });
+        });
+
+        // 按时间排序
+        waveData.spawnEvents.sort((a, b) => a.time - b.time);
+
+        return waveData;
+    }
+
+    // 显示波次统计信息
+    showWaveStatistics() {
+        const waveData = this.generateWaveData();
+        
+        // 统计敌人数量
+        const enemyCount = {};
+        let totalEnemies = 0;
+        
+        waveData.spawnEvents.forEach(event => {
+            if (!enemyCount[event.enemyName]) {
+                enemyCount[event.enemyName] = 0;
+            }
+            enemyCount[event.enemyName] += event.count;
+            totalEnemies += event.count;
+        });
+
+        // 生成统计HTML
+        let statsHTML = `
+            <div class="wave-stats">
+                <h3>📊 波次统计</h3>
+                <div class="stat-item">
+                    <strong>总时长:</strong> ${waveData.duration} 秒
+                </div>
+                <div class="stat-item">
+                    <strong>生成事件数:</strong> ${waveData.spawnEvents.length}
+                </div>
+                <div class="stat-item">
+                    <strong>敌人总数:</strong> ${totalEnemies}
+                </div>
+                <div class="enemy-breakdown">
+                    <strong>敌人分布:</strong>
+                    <ul>
+        `;
+
+        for (const [name, count] of Object.entries(enemyCount)) {
+            const enemy = enemyTypeRegistry.getAll().find(e => e.name === name);
+            statsHTML += `
+                <li>${enemy ? enemy.icon : '👾'} ${name}: ${count} 个</li>
+            `;
+        }
+
+        statsHTML += `
+                    </ul>
+                </div>
+            </div>
+        `;
+
+        alert('波次统计（详细信息请查看控制台）\n\n' + 
+              `总时长: ${waveData.duration}秒\n` +
+              `生成事件: ${waveData.spawnEvents.length}个\n` +
+              `敌人总数: ${totalEnemies}个`);
+        
+        console.log('📊 波次统计信息:', waveData);
+    }
+
     // 导入时间轴
     importTimeline(jsonString) {
         const timeline = Timeline.import(jsonString);
@@ -676,6 +906,425 @@ class TimelineApp {
             this.durationInput.value = timeline.duration;
             this.updateTimeline();
             this.closeSidebar();
+        }
+    }
+
+    // 打开敌人管理器
+    openEnemyManager() {
+        let modal = document.getElementById('enemyManagerModal');
+        if (!modal) {
+            this.createEnemyManagerModal();
+            modal = document.getElementById('enemyManagerModal');
+        }
+        this.refreshEnemyList();
+        modal.classList.add('active');
+    }
+
+    // 创建敌人管理器模态框
+    createEnemyManagerModal() {
+        const modal = document.createElement('div');
+        modal.id = 'enemyManagerModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2>🎮 敌人类型管理器</h2>
+                    <div class="modal-header-actions">
+                        <button class="btn btn-primary" onclick="app.showAddEnemyForm()">➕ 添加新敌人</button>
+                        <button class="btn-close" onclick="app.closeEnemyManager()">✖</button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div id="enemyList" class="enemy-grid"></div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    // 创建敌人表单模态框
+    createEnemyFormModal() {
+        const modal = document.createElement('div');
+        modal.id = 'enemyFormModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="enemyFormTitle">➕ 添加新敌人</h2>
+                    <button class="btn-close" onclick="app.closeEnemyForm()">✖</button>
+                </div>
+                <div class="modal-body">
+                    <div class="enemy-form">
+                        <div class="form-group">
+                            <label>ID (唯一标识符) *:</label>
+                            <input type="text" id="newEnemyId" placeholder="例如: chaser_enemy">
+                            <small>使用小写字母和下划线</small>
+                        </div>
+                        <div class="form-group">
+                            <label>名称 *:</label>
+                            <input type="text" id="newEnemyName" placeholder="例如: 追击者">
+                        </div>
+                        <div class="form-group">
+                            <label>图标:</label>
+                            <div class="icon-upload-container">
+                                <div class="icon-preview" id="iconPreview">
+                                    <span class="icon-placeholder">📷</span>
+                                </div>
+                                <div class="icon-upload-options">
+                                    <label class="btn btn-secondary" for="iconFileInput">📁 上传图片</label>
+                                    <input type="file" id="iconFileInput" accept="image/*" style="display:none;">
+                                    <button class="btn btn-secondary btn-sm" onclick="app.clearIcon()">清除</button>
+                                </div>
+                            </div>
+                            <small>上传图片作为图标（推荐64x64px）</small>
+                        </div>
+                        <hr>
+                        <div class="form-group">
+                            <label>Godot 场景路径 (可选，烘焙时需要):</label>
+                            <input type="text" id="newEnemyScenePath" placeholder="例如: res://scenes/enemies/ChaserEnemy.tscn">
+                            <small>Godot场景文件路径</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Godot 资源UID (可选，烘焙时需要):</label>
+                            <input type="text" id="newEnemyUid" placeholder="例如: uid://30ktq4nfbdpc">
+                            <small>Godot资源唯一标识符</small>
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn btn-primary" onclick="app.saveEnemy()">💾 保存</button>
+                            <button class="btn btn-secondary" onclick="app.closeEnemyForm()">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // 绑定文件上传事件
+        document.getElementById('iconFileInput').addEventListener('change', (e) => {
+            this.handleIconUpload(e);
+        });
+    }
+
+    // 刷新敌人列表
+    refreshEnemyList() {
+        const enemyList = document.getElementById('enemyList');
+        if (!enemyList) return;
+
+        const enemies = enemyTypeRegistry.getAll();
+        
+        if (enemies.length === 0) {
+            enemyList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">👾</div>
+                    <p>还没有添加任何敌人类型</p>
+                    <button class="btn btn-primary" onclick="app.showAddEnemyForm()">➕ 添加第一个敌人</button>
+                </div>
+            `;
+            return;
+        }
+
+        enemyList.innerHTML = enemies.map(enemy => {
+            const validation = enemyTypeRegistry.validate(enemy.id);
+            const statusIcon = validation.valid ? '✅' : '⚠️';
+            const statusText = validation.valid ? '配置完整' : '需要补充';
+            const iconDisplay = this.renderEnemyIcon(enemy.icon);
+            
+            return `
+                <div class="enemy-card-compact" onclick="app.toggleEnemyDetails('${enemy.id}')">
+                    <div class="enemy-card-main">
+                        <div class="enemy-icon-small">${iconDisplay}</div>
+                        <div class="enemy-card-info">
+                            <strong>${enemy.name}</strong>
+                            <small>${enemy.id}</small>
+                        </div>
+                        <span class="status-badge ${validation.valid ? 'status-valid' : 'status-warning'}">
+                            ${statusIcon} ${statusText}
+                        </span>
+                        <div class="enemy-card-actions" onclick="event.stopPropagation()">
+                            <button class="btn-icon" onclick="app.editEnemy('${enemy.id}')" title="编辑">✏️</button>
+                            <button class="btn-icon btn-danger" onclick="app.deleteEnemy('${enemy.id}')" title="删除">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="enemy-card-details" id="details-${enemy.id}" style="display: none;">
+                        <div class="detail-row">
+                            <label>场景路径:</label>
+                            <span class="detail-value">${enemy.scenePath || '<未设置>'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <label>资源UID:</label>
+                            <span class="detail-value">${enemy.uid || '<未设置>'}</span>
+                        </div>
+                        ${!validation.valid ? `
+                            <div class="detail-warnings">
+                                <strong>⚠️ 烘焙警告:</strong>
+                                <ul>
+                                    ${validation.warnings.map(w => `<li>${w}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // 渲染敌人图标
+    renderEnemyIcon(icon) {
+        // 如果没有图标或是默认的👾，显示默认图标
+        if (!icon || icon === '👾') {
+            return '👾';
+        }
+        // 如果是base64图片
+        if (icon.startsWith('data:image')) {
+            return `<img src="${icon}" alt="icon" class="icon-image">`;
+        }
+        // 否则是emoji
+        return icon;
+    }
+
+    // 为选择框渲染敌人显示文本（不显示完整base64）
+    renderEnemySelectText(icon, name) {
+        if (!icon || icon === '👾') {
+            // 没有图标或默认图标，只显示名称
+            return name;
+        }
+        if (icon.startsWith('data:image')) {
+            // 是图片，显示：🖼️ 名称
+            return `🖼️ ${name}`;
+        }
+        // 是emoji，显示emoji + 名称
+        return `${icon} ${name}`;
+    }
+
+    // 切换敌人详情显示
+    toggleEnemyDetails(enemyId) {
+        const details = document.getElementById(`details-${enemyId}`);
+        if (details) {
+            const isVisible = details.style.display !== 'none';
+            details.style.display = isVisible ? 'none' : 'block';
+        }
+    }
+
+    // 添加新敌人
+    addNewEnemy() {
+        const id = document.getElementById('newEnemyId').value.trim();
+        const name = document.getElementById('newEnemyName').value.trim();
+        const scenePath = document.getElementById('newEnemyScenePath').value.trim();
+        const uid = document.getElementById('newEnemyUid').value.trim();
+
+        if (!id || !name) {
+            alert('请填写ID和名称');
+            return;
+        }
+
+        if (enemyTypeRegistry.enemies.has(id)) {
+            alert('该ID已存在，请使用其他ID');
+            return;
+        }
+
+        // 使用上传的图标，如果没有则使用默认图标
+        const icon = this.currentIconData || '👾';
+
+        enemyTypeRegistry.register(id, {
+            name,
+            icon,
+            scenePath,
+            uid,
+        });
+
+        this.closeEnemyForm();
+        this.refreshEnemyList();
+        
+        const validation = enemyTypeRegistry.validate(id);
+        if (!validation.valid) {
+            alert('✅ 敌人类型添加成功！\n\n⚠️ 提示: Godot资源信息未填写，烘焙时需要补充');
+        } else {
+            alert('✅ 敌人类型添加成功！');
+        }
+    }
+
+    // 编辑敌人
+    editEnemy(enemyId) {
+        const enemy = enemyTypeRegistry.get(enemyId);
+        if (!enemy) return;
+
+        if (!document.getElementById('enemyFormModal')) {
+            this.createEnemyFormModal();
+        }
+
+        this.currentEditingEnemyId = enemyId;
+
+        // 填充表单
+        document.getElementById('newEnemyId').value = enemy.id;
+        document.getElementById('newEnemyId').disabled = true; // ID不可修改
+        document.getElementById('newEnemyName').value = enemy.name;
+        document.getElementById('newEnemyScenePath').value = enemy.scenePath || '';
+        document.getElementById('newEnemyUid').value = enemy.uid || '';
+
+        // 处理图标
+        this.currentIconData = enemy.icon;
+        this.updateIconPreview(enemy.icon);
+
+        document.getElementById('enemyFormTitle').textContent = '✏️ 编辑敌人';
+        document.getElementById('enemyFormModal').classList.add('active');
+    }
+
+    // 保存敌人编辑
+    saveEnemyEdit(enemyId) {
+        const name = document.getElementById('newEnemyName').value.trim();
+        const scenePath = document.getElementById('newEnemyScenePath').value.trim();
+        const uid = document.getElementById('newEnemyUid').value.trim();
+
+        if (!name) {
+            alert('请填写名称');
+            return;
+        }
+
+        // 使用上传的图标，如果没有则使用默认图标
+        const icon = this.currentIconData || '👾';
+
+        enemyTypeRegistry.register(enemyId, {
+            name,
+            icon,
+            scenePath,
+            uid,
+        });
+
+        this.closeEnemyForm();
+        this.refreshEnemyList();
+        
+        // 如果当前编辑的事件使用了这个敌人，刷新编辑器和时间轴显示
+        if (this.selectedEvent && this.selectedEvent.type === 'spawn_enemy' && 
+            this.selectedEvent.customData.enemyType === enemyId) {
+            this.showEventEditor(this.selectedEvent);
+            this.renderTracks(); // 刷新时间轴上的图标显示
+        }
+
+        alert('✅ 敌人类型已更新！');
+    }
+
+    // 显示添加敌人表单
+    showAddEnemyForm() {
+        if (!document.getElementById('enemyFormModal')) {
+            this.createEnemyFormModal();
+        }
+        this.currentEditingEnemyId = null;
+        this.resetEnemyForm();
+        document.getElementById('enemyFormTitle').textContent = '➕ 添加新敌人';
+        document.getElementById('enemyFormModal').classList.add('active');
+    }
+
+    // 关闭敌人表单
+    closeEnemyForm() {
+        document.getElementById('enemyFormModal').classList.remove('active');
+        this.currentEditingEnemyId = null;
+        this.currentIconData = null;
+    }
+
+    // 处理图标上传
+    handleIconUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('请上传图片文件');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                // 缩放到64x64
+                const canvas = document.createElement('canvas');
+                canvas.width = 64;
+                canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+                
+                // 绘制并缩放图片
+                ctx.drawImage(img, 0, 0, 64, 64);
+                
+                // 转换为base64
+                const iconData = canvas.toDataURL('image/png');
+                this.currentIconData = iconData;
+                
+                // 更新预览
+                this.updateIconPreview(iconData);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // 更新图标预览
+    updateIconPreview(iconValue) {
+        const preview = document.getElementById('iconPreview');
+        if (!preview) return;
+
+        if (!iconValue) {
+            preview.innerHTML = '<span class="icon-placeholder">📷</span>';
+            return;
+        }
+
+        if (iconValue.startsWith('data:image')) {
+            // 图片
+            preview.innerHTML = `<img src="${iconValue}" alt="icon" class="icon-image">`;
+            this.currentIconData = iconValue;
+        } else {
+            // Emoji
+            preview.innerHTML = `<span class="icon-emoji">${iconValue}</span>`;
+            this.currentIconData = iconValue;
+        }
+    }
+
+    // 清除图标
+    clearIcon() {
+        document.getElementById('iconFileInput').value = '';
+        this.currentIconData = null;
+        this.updateIconPreview('');
+    }
+
+    // 保存敌人（统一的保存方法）
+    saveEnemy() {
+        if (this.currentEditingEnemyId) {
+            this.saveEnemyEdit(this.currentEditingEnemyId);
+        } else {
+            this.addNewEnemy();
+        }
+    }
+
+    // 重置敌人表单
+    resetEnemyForm() {
+        document.getElementById('newEnemyId').value = '';
+        document.getElementById('newEnemyId').disabled = false;
+        document.getElementById('newEnemyName').value = '';
+        document.getElementById('newEnemyScenePath').value = '';
+        document.getElementById('newEnemyUid').value = '';
+        document.getElementById('iconFileInput').value = '';
+        this.currentIconData = null;
+        this.updateIconPreview('');
+    }
+
+    // 删除敌人类型
+    deleteEnemy(enemyId) {
+        if (!confirm(`确定要删除敌人类型 "${enemyId}" 吗？`)) {
+            return;
+        }
+
+        if (enemyTypeRegistry.remove(enemyId)) {
+            this.refreshEnemyList();
+            alert('敌人类型已删除');
+        } else {
+            alert('无法删除该敌人类型');
+        }
+    }
+
+    // 关闭敌人管理器
+    closeEnemyManager() {
+        document.getElementById('enemyManagerModal').classList.remove('active');
+        // 如果当前编辑的是敌人生成事件，刷新编辑器
+        if (this.selectedEvent && this.selectedEvent.type === 'spawn_enemy') {
+            this.showEventEditor(this.selectedEvent);
         }
     }
 }
